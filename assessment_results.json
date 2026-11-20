@@ -1,0 +1,64 @@
+[
+  {
+    "id": "Q1",
+    "question": "What is the minimum required estimated Glomerular Filtration Rate (eGFR) threshold for a patient to be included in the CardioVex Phase III trial?",
+    "expected_answer": "Baseline eGFR of at least 45 mL/min/1.73m2 (CKD-EPI creatinine equation; adult patients 40-80 years; <45 strictly excluded).",
+    "expected_sources": [
+      "Page 14"
+    ],
+    "generated_answer": "The minimum required baseline estimated Glomerular Filtration Rate (eGFR) threshold for patient inclusion in the CardioVex (CVX-409) Phase III trial is at least 45 mL/min/1.73m\u00b2, calculated using the CKD-EPI creatinine equation. Adult patients (aged 40\u201380 years with NYHA Class II\u2013III heart failure) who present with a baseline eGFR strictly below 45 mL/min/1.73m\u00b2 do not meet renal eligibility criteria and are strictly excluded from trial participation.",
+    "generated_sources": [
+      "Page 14"
+    ],
+    "latency_sec": 0.1956,
+    "passed": true
+  },
+  {
+    "id": "Q2",
+    "question": "Within how many hours of becoming aware of a Serious Adverse Event (SAE) must a site investigator report it to the pharmacovigilance safety desk?",
+    "expected_answer": "Within 24 hours of initial site awareness via the electronic eCRF safety portal (regardless of whether considered drug-related).",
+    "expected_sources": [
+      "Page 28"
+    ],
+    "generated_answer": "A site investigator (including Principal Investigators and site clinical coordinators) must report any Serious Adverse Event (SAE), regardless of whether it is considered investigational drug-related or not, to the central Pharmacovigilance Safety Desk within 24 hours of initial site awareness via the electronic eCRF safety portal.",
+    "generated_sources": [
+      "Page 28"
+    ],
+    "latency_sec": 0.0892,
+    "passed": true
+  },
+  {
+    "id": "Q3",
+    "question": "What is the wholesale or retail price of CardioVex in commercial pharmacies?",
+    "expected_answer": "[not found]",
+    "expected_sources": [],
+    "generated_answer": "[not found]",
+    "generated_sources": [],
+    "latency_sec": 0.0858,
+    "passed": true
+  },
+  {
+    "id": "Q4",
+    "question": "Within what exact temperature range, in degrees Celsius, must reconstituted CardioVex vials be stored before administration?",
+    "expected_answer": "Strictly between 2\u00b0C and 8\u00b0C (2 degrees Celsius to 8 degrees Celsius) in a calibrated medical refrigerator with continuous temperature logging; do not freeze.",
+    "expected_sources": [
+      "Page 42"
+    ],
+    "generated_answer": "Prior to intravenous administration, reconstituted CardioVex vials must be stored strictly within the temperature range of 2\u00b0C to 8\u00b0C (2 degrees Celsius to 8 degrees Celsius) in a calibrated medical refrigerator equipped with continuous temperature logging. Reconstituted vials must not be frozen.",
+    "generated_sources": [
+      "Page 42"
+    ],
+    "latency_sec": 0.0871,
+    "passed": true
+  },
+  {
+    "id": "Q5",
+    "question": "What is the standard recommended dosage of amoxicillin for treating a paediatric ear infection?",
+    "expected_answer": "[not found]",
+    "expected_sources": [],
+    "generated_answer": "[not found]",
+    "generated_sources": [],
+    "latency_sec": 0.087,
+    "passed": true
+  }
+]

@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ChromaDB persistence directory & session temp files
+.chroma_db/
+chroma_db/
+*.ses
+:memory:*
+
+# Environment variables
+.env
+
+# Testing & caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# macOS files
+.DS_Store
+
+# Logs
+*.log
