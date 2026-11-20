@@ -26,6 +26,21 @@ def get_retriever() -> ProtocolRetriever:
     return _RETRIEVER_INSTANCE
 
 
+def _clean_general_text(text: str) -> str:
+    """Removes standard header, footer, and artifact boilerplate from chunk text."""
+    cleaned = re.sub(
+        r"CardioVex \(CVX-409\) Phase-3 Multicenter Clinical Trial Protocol - Official Reference Corpus",
+        "", text, flags=re.IGNORECASE
+    )
+    cleaned = re.sub(r"Document Page \d+ of 50", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"Page \d+ of 50 \| Confidential Assessment Corpus - Do Not Distribute", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"={5,}", "", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    # Strip trailing broken numbering (e.g., ' 2.' or ' 3.')
+    cleaned = re.sub(r"\s+\d+\.?\s*$", "", cleaned).strip()
+    return cleaned
+
+
 def _clinical_reasoner(question: str, chunks: List[Dict]) -> Dict:
     """
     Deterministic clinical grounding engine that evaluates retrieved context
@@ -98,8 +113,9 @@ def _clinical_reasoner(question: str, chunks: List[Dict]) -> Dict:
 
     # If general matching chunk found within threshold
     top_chunk = chunks[0]
+    cleaned_ans = _clean_general_text(top_chunk["text"])
     return {
-        "answer": top_chunk["text"],
+        "answer": cleaned_ans,
         "sources": [top_chunk["page_label"]]
     }
 
