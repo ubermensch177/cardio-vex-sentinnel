@@ -1,6 +1,7 @@
 # CardioVex Sentinel AI 🛡️
 ### *Fully Conversational Clinical Trial Protocol & Pharmacovigilance RAG Assistant*
 
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-181717?style=flat&logo=github)](https://github.com/ubermensch177/cardio-vex-sentinnel.git)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![Vector DB](https://img.shields.io/badge/Vector%20DB-ChromaDB%201.5.9-red.svg)](https://www.trychroma.com/)
 [![Architecture](https://img.shields.io/badge/RAG-Fully%20Conversational%20%26%20Dynamic-brightgreen.svg)]()
@@ -15,7 +16,10 @@
 
 Operating dynamically on the complete 50-page Phase III clinical trial protocol for **CardioVex (CVX-409)**, the assistant is **NOT restricted or hardcoded to any predetermined questions**. It understands natural language inquiries across all 50 pages, maintains multi-turn conversation memory, resolves contextual follow-ups (*"Why?"*, *"What happens if they fail this criterion?"*, *"What about SAEs?"*, *"Summarize it"*, *"Explain in simple terms"*), and generates evidence-grounded answers citing source pages.
 
-If an inquiry is outside the 50-page protocol (e.g., commercial pricing or unrelated pediatric medications), it strictly enforces regulatory compliance by returning exactly **`[not found]`**.
+### 💬 Human-like Small Talk & Deep Clinical Precision
+- **Natural Human-like Conversational Intros**: Greets users warmly, introduces its role and capabilities, handles pleasantries (*"How are you?"*, *"Thank you"*, *"What can you do?"*, *"Goodbye"*), and invites clinical inquiry.
+- **Deep Precision Protocol Answers**: Automatically detects clinical questions and routes them to dense vector retrieval across all 50 pages of the protocol, extracting exact thresholds, clauses, and page citations.
+- **Strict Grounding Enforcement**: If an inquiry is outside the 50-page protocol (e.g., commercial retail pharmacy pricing or unrelated pediatric ear infection antibiotics), it strictly enforces regulatory compliance by returning exactly **`[not found]`** with empty sources `[]`.
 
 ---
 
@@ -28,17 +32,21 @@ flowchart TD
     C --> D["Dense Vector Embeddings\n(ChromaDB Local ONNX all-MiniLM-L6-v2)"]
     D --> E[("Persistent ChromaDB Database\n(./chroma_db)")]
     
-    F["User Query / Follow-up Turn"] --> G["Conversation History & Memory\n(ConversationManager)"]
-    G --> H["Contextual Query Rewriter\n(Resolves Pronouns, Ellipses & Topic Shifts)"]
-    H --> I["ChromaDB Top-K Vector Search\n(Cosine Distance Filtering)"]
-    E -.->|Index Persistence Check| I
+    F["User Message / Inquiry"] --> G{"Small Talk or Intro?"}
+    G -->|Greeting / Intro / Thanks| H1["Human-like Conversational Response\n(Warm Greeting, Capabilities, Sources: [])"]
+    G -->|Clinical / Protocol Inquiry| H2["Conversation History & Memory\n(ConversationManager)"]
     
-    I --> J["Dynamic Clinical Synthesis Engine\n(Local Extractor / Ollama Local LLM)"]
-    J -->|Evidence Present in Context| K["Grounded Technical Answer\n+ Official Source Citation (e.g. Page 14)"]
-    J -->|Evidence Missing / Out-of-Corpus| L["Strict '[not found]' Fallback\n+ Empty Sources: []"]
+    H2 --> I["Contextual Query Rewriter\n(Resolves Pronouns, Ellipses & Follow-ups)"]
+    I --> J["ChromaDB Top-K Vector Search\n(Cosine Distance Filtering)"]
+    E -.->|Index Persistence Check| J
     
-    K --> M["Multi-Turn Chatbot UI & CLI Response\n(Stateful Dialogue History)"]
-    L --> M
+    J --> K["Dynamic Clinical Synthesis Engine\n(Local Extractor / Ollama Local LLM)"]
+    K -->|Evidence Present in Context| L["Grounded Technical Answer\n+ Official Source Citation (e.g. Page 14)"]
+    K -->|Evidence Missing / Out-of-Corpus| M["Strict '[not found]' Fallback\n+ Empty Sources: []"]
+    
+    H1 --> N["Minimalist Chatbot UI & CLI Stream\n(Stateful Dialogue & Chat History)"]
+    L --> N
+    M --> N
 ```
 
 ### Multi-Turn Contextual Follow-up Sequence
@@ -48,10 +56,15 @@ sequenceDiagram
     autonumber
     actor Clinician as User / Clinician
     participant Chat as Conversational Chatbot UI
+    participant Router as Intent & Small Talk Router
     participant CM as ConversationManager
     participant Rewriter as Contextual Query Rewriter
     participant Ret as ProtocolRetriever (ChromaDB)
     participant Synth as Dynamic Grounded Synthesizer
+
+    Clinician->>Chat: "Hello! Who are you and how can you help?"
+    Chat->>Router: Detects greeting & introduction intent
+    Router-->>Chat: "Hello! I am CardioVex Sentinel AI, your clinical trial assistant..."
 
     Clinician->>Chat: "What is the minimum eGFR required?"
     Chat->>Rewriter: Query: "What is the minimum eGFR required?" (History: [])
@@ -156,30 +169,38 @@ All five official assessment questions were validated against the dynamic retrie
 
 ## 🚀 Quickstart & Usage
 
-### 1. Launch the Conversational Web Chatbot (Zero Extra Dependencies)
-Runs on any machine without heavy pip installations:
+### 1. Clone the Repository
+```bash
+git clone https://github.com/ubermensch177/cardio-vex-sentinnel.git
+cd cardio-vex-sentinnel
+```
+
+### 2. Launch the Minimalist Desktop Web Chatbot (Zero Extra Dependencies)
 ```bash
 python3 server.py
 ```
-Open **[http://localhost:8080](http://localhost:8080)** in your browser to chat with memory, click quick prompt chips, and view the live benchmark modal.
+Open **[http://localhost:8080](http://localhost:8080)** in your browser:
+- **Left Sidebar**: `+ New Chat` button and previous chat history list (click to reload, delete).
+- **Clean Chat Stream**: Centered message feed with verified source pills (e.g., `Page 14`).
+- **Small Talk & Intro**: Talk casually (`"Hi"`, `"Who are you?"`, `"How are you?"`) or ask complex protocol questions.
 
-### 2. Launch with Streamlit
+### 3. Launch with Streamlit
 ```bash
 streamlit run app.py
 ```
 
-### 3. Interactive Multi-Turn CLI Chatbot
+### 4. Interactive Multi-Turn CLI Chatbot
 ```bash
 python3 main.py
 ```
 *Supports conversational context memory in terminal. Type `/clear` to reset dialogue, `assess` to run benchmark, or `exit` to quit.*
 
-### 4. Run the Automated Assessment Benchmark
+### 5. Run the Automated Assessment Benchmark
 ```bash
 python3 run_assessment.py
 ```
 
-### 5. Run the Automated Unit Test Suite (9 Tests)
+### 6. Run the Automated Unit Test Suite (11 Tests, 100% Pass)
 ```bash
 python3 -m unittest test_rag.py
 ```
@@ -189,18 +210,18 @@ python3 -m unittest test_rag.py
 ## 📁 Repository Structure
 
 ```
-exam-project/
+cardio-vex-sentinnel/
 ├── cardiovex_clinical_trial_protocol_50p.pdf   # 50-page Phase III protocol corpus
 ├── config.py                                   # Centralized configuration & environment loader
 ├── conversation.py                             # ConversationManager & Contextual Query Rewriter
 ├── ingestion.py                                # PDF ingestion (1000-char chunks), ChromaDB persistent storage
 ├── retriever.py                                # Top-K semantic retriever & distance filtering
 ├── rag_engine.py                               # Fully dynamic conversational RAG engine & required answer()
-├── server.py                                   # Production Chatbot Web Application (localhost:8080)
+├── server.py                                   # Minimalist Desktop Chatbot Web Server (localhost:8080)
 ├── app.py                                      # Streamlit Chatbot Web Interface (streamlit run app.py)
 ├── main.py                                     # Interactive conversational CLI chatbot
 ├── run_assessment.py                           # Benchmark runner for 5 assessment questions
-├── test_rag.py                                 # Automated unit test suite (9 tests, 100% pass)
+├── test_rag.py                                 # Automated unit test suite (11 tests, 100% pass)
 ├── generate_screenshot.py                      # Terminal screenshot generator utility
 ├── requirements.txt                            # Production dependencies
 ├── .env.example                                # Environment variable configuration template

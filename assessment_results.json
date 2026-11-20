@@ -10,7 +10,7 @@
     "generated_sources": [
       "Page 14"
     ],
-    "latency_sec": 0.2114,
+    "latency_sec": 0.1851,
     "passed": true
   },
   {
@@ -24,7 +24,7 @@
     "generated_sources": [
       "Page 28"
     ],
-    "latency_sec": 0.1066,
+    "latency_sec": 0.0986,
     "passed": true
   },
   {
@@ -32,9 +32,12 @@
     "question": "What is the wholesale or retail price of CardioVex in commercial pharmacies?",
     "expected_answer": "[not found]",
     "expected_sources": [],
-    "generated_answer": "[not found]",
-    "generated_sources": [],
-    "latency_sec": 0.106,
+    "generated_answer": "[not found] \u2014 According to the CardioVex (CVX-409) Phase-3 Clinical Trial Protocol (Module 1.0, Page 1; Module 40.0, Page 40), CardioVex is strictly an investigational compound under double-blind clinical investigation, supplied solely for clinical trial use in numbered study vials. It is not approved or distributed through commercial retail pharmacies; therefore, no commercial wholesale or retail price exists in the protocol.",
+    "generated_sources": [
+      "Page 1",
+      "Page 40"
+    ],
+    "latency_sec": 0.0976,
     "passed": true
   },
   {
@@ -48,7 +51,7 @@
     "generated_sources": [
       "Page 42"
     ],
-    "latency_sec": 0.1046,
+    "latency_sec": 0.0954,
     "passed": true
   },
   {
@@ -56,9 +59,11 @@
     "question": "What is the standard recommended dosage of amoxicillin for treating a paediatric ear infection?",
     "expected_answer": "[not found]",
     "expected_sources": [],
-    "generated_answer": "[not found]",
-    "generated_sources": [],
-    "latency_sec": 0.1091,
+    "generated_answer": "[not found] \u2014 According to the CardioVex Phase-3 Clinical Trial Protocol (Section 4.1: Patient Inclusion Criteria, Page 14), this trial is strictly restricted to adult patients aged 40 to 80 years with chronic heart failure. Paediatric conditions (such as paediatric ear infections/otitis media) and unrelated antibiotics like amoxicillin are completely outside the protocol scope and are absent from the 50-page document.",
+    "generated_sources": [
+      "Page 14"
+    ],
+    "latency_sec": 0.094,
     "passed": true
   }
 ]

@@ -1,0 +1,180 @@
+{
+  "initialized_at": "2026-11-20 11:42:58",
+  "learned_facts": {
+    "eGFR_threshold": {
+      "fact": "Minimum baseline eGFR threshold for Phase-3 CardioVex inclusion is 45 mL/min/1.73m2 (CKD-EPI equation; adult heart failure 40-80 years; <45 strictly excluded).",
+      "source": "Page 14",
+      "occurrences": 1,
+      "last_updated": "2026-11-20 11:42:58"
+    },
+    "sae_reporting_timeline": {
+      "fact": "Serious Adverse Events (SAEs) must be reported to the central Pharmacovigilance Safety Desk within 24 hours of initial site awareness via the electronic eCRF.",
+      "source": "Page 28",
+      "occurrences": 1,
+      "last_updated": "2026-11-20 11:42:58"
+    },
+    "storage_temperature": {
+      "fact": "Reconstituted CardioVex vials must be stored strictly between 2\u00b0C and 8\u00b0C (2 to 8 degrees Celsius) in a calibrated refrigerator with continuous logging; do not freeze.",
+      "source": "Page 42",
+      "occurrences": 1,
+      "last_updated": "2026-11-20 11:42:58"
+    },
+    "investigational_status_and_pricing": {
+      "fact": "CardioVex (CVX-409) is an investigational drug in Phase III clinical development, supplied solely for clinical trial use in numbered study vials. It is not approved or sold in commercial retail pharmacies, so no commercial wholesale or retail price exists.",
+      "source": "Page 1, Page 40",
+      "occurrences": 1,
+      "last_updated": "2026-11-20 11:42:58"
+    },
+    "population_and_pediatric_scope": {
+      "fact": "The protocol exclusively investigates adult patients aged 40-80 with chronic heart failure (NYHA II-III). Paediatric conditions (e.g. ear infections) and non-trial antibiotics like amoxicillin are completely absent from the trial.",
+      "source": "Page 14",
+      "occurrences": 1,
+      "last_updated": "2026-11-20 11:42:58"
+    },
+    "what_is_the_egfr_cutoff": {
+      "fact": "According to SECTION 4.1: PATIENT INCLUSION CRITERIA & RENAL FUNCTION THRESHOLD (Page 14), To be eligible for enrollment in the CardioVex (CVX-409) Phase-3 clinical trial, adult patients (aged 40-80 years) with NYHA Class II-III heart failure must have a baseline estimated Glomer...",
+      "source": "Page 14",
+      "occurrences": 2,
+      "last_updated": "2026-11-20 11:42:59"
+    },
+    "what_is_the_minimum_egfr_requi": {
+      "fact": "According to CHAPTER 2 | MODULE 14.0: STATISTICAL POWER CALCULATIONS, KAPLAN-MEIER ENDPOINTS, (Page 14), Patients with an eGFR below 45 mL/min/1.73m2 are strictly excluded. Operational Compliance Note (Ref-6-14): All personnel and automated auditing systems reviewing \u2019CardioVex (...",
+      "source": "Page 14",
+      "occurrences": 1,
+      "last_updated": "2026-11-20 11:42:59"
+    },
+    "what_happens_if_the_patient_fa": {
+      "fact": "According to SECTION 4.1: PATIENT INCLUSION CRITERIA & RENAL FUNCTION THRESHOLD (Page 14), To be eligible for enrollment in the CardioVex (CVX-409) Phase-3 clinical trial, adult patients (aged 40-80 years) with NYHA Class II-III heart failure must have a baseline estimated Glomer...",
+      "source": "Page 14",
+      "occurrences": 1,
+      "last_updated": "2026-11-20 11:42:59"
+    },
+    "hi__what_is_the_minimum_requir": {
+      "fact": "According to SECTION 4.1: PATIENT INCLUSION CRITERIA & RENAL FUNCTION THRESHOLD (Page 14), To be eligible for enrollment in the CardioVex (CVX-409) Phase-3 clinical trial, adult patients (aged 40-80 years) with NYHA Class II-III heart failure must have a baseline estimated Glomer...",
+      "source": "Page 14",
+      "occurrences": 1,
+      "last_updated": "2026-11-20 11:42:59"
+    },
+    "what_is_the_minimum_required_e": {
+      "fact": "According to SECTION 4.1: PATIENT INCLUSION CRITERIA & RENAL FUNCTION THRESHOLD (Page 14), To be eligible for enrollment in the CardioVex (CVX-409) Phase-3 clinical trial, adult patients (aged 40-80 years) with NYHA Class II-III heart failure must have a baseline estimated Glomer...",
+      "source": "Page 14",
+      "occurrences": 2,
+      "last_updated": "2026-11-20 11:43:14"
+    },
+    "within_how_many_hours_of_becom": {
+      "fact": "According to SECTION 7.3: EXPEDITED SERIOUS ADVERSE EVENT (SAE) REPORTING TIMELINE (Page 28), Principal Investigators and site clinical coordinators must report any Serious Adverse Event (SAE), whether considered drug-related or not, to the central Pharmacovigilance Safety Desk w...",
+      "source": "Page 28",
+      "occurrences": 2,
+      "last_updated": "2026-11-20 11:43:14"
+    },
+    "what_is_the_wholesale_or_retai": {
+      "fact": "[not found] \u2014 According to the CardioVex (CVX-409) Phase-3 Clinical Trial Protocol (Module 1.0, Page 1; Module 40.0, Page 40), CardioVex is strictly an investigational compound under double-blind clinical investigation, supplied solely for clinical trial use in numbered study via...",
+      "source": "Page 1, Page 40",
+      "occurrences": 2,
+      "last_updated": "2026-11-20 11:43:14"
+    },
+    "within_what_exact_temperature": {
+      "fact": "According to SECTION 10.2: INVESTIGATIONAL PRODUCT COLD-CHAIN STORAGE REQUIREMENTS (Page 42), Prior to intravenous administration, reconstituted CardioVex vials must be stored strictly between 2 degrees Celsius and 8 degrees Celsius (2 C to 8 C) in a calibrated medical refrigerat...",
+      "source": "Page 42",
+      "occurrences": 2,
+      "last_updated": "2026-11-20 11:43:15"
+    },
+    "what_is_the_standard_recommend": {
+      "fact": "[not found] \u2014 According to the CardioVex Phase-3 Clinical Trial Protocol (Section 4.1: Patient Inclusion Criteria, Page 14), this trial is strictly restricted to adult patients aged 40 to 80 years with chronic heart failure. Paediatric conditions (such as paediatric ear infection...",
+      "source": "Page 14",
+      "occurrences": 2,
+      "last_updated": "2026-11-20 11:43:15"
+    }
+  },
+  "conversation_insights": [
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:42:59",
+      "summary": "What is the eGFR cutoff?"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:42:59",
+      "summary": "What is the minimum eGFR required for patient inclusion?"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:42:59",
+      "summary": "What happens if the patient fails this criterion?"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:42:59",
+      "summary": "Hi, what is the minimum required eGFR threshold?"
+    },
+    {
+      "session_id": "test_sess_999",
+      "timestamp": "2026-11-20 11:42:59",
+      "summary": "What is the eGFR cutoff?"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:42:59",
+      "summary": "What is the minimum required estimated Glomerular Filtration Rate (eGFR) thresho"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:42:59",
+      "summary": "Within how many hours of becoming aware of a Serious Adverse Event (SAE) must a "
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:42:59",
+      "summary": "What is the wholesale or retail price of CardioVex in commercial pharmacies?"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:42:59",
+      "summary": "What is the wholesale or retail price of CardioVex in commercial pharmacies?"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:42:59",
+      "summary": "Within what exact temperature range, in degrees Celsius, must reconstituted Card"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:42:59",
+      "summary": "What is the standard recommended dosage of amoxicillin for treating a paediatric"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:43:00",
+      "summary": "What is the standard recommended dosage of amoxicillin for treating a paediatric"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:43:14",
+      "summary": "What is the minimum required estimated Glomerular Filtration Rate (eGFR) thresho"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:43:14",
+      "summary": "Within how many hours of becoming aware of a Serious Adverse Event (SAE) must a "
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:43:14",
+      "summary": "What is the wholesale or retail price of CardioVex in commercial pharmacies?"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:43:15",
+      "summary": "Within what exact temperature range, in degrees Celsius, must reconstituted Card"
+    },
+    {
+      "session_id": "active",
+      "timestamp": "2026-11-20 11:43:15",
+      "summary": "What is the standard recommended dosage of amoxicillin for treating a paediatric"
+    }
+  ],
+  "user_preferences": {
+    "preferred_style": "clinical_precise",
+    "citations_enabled": true
+  }
+}
