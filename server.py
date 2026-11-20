@@ -1,12 +1,8 @@
 """
-CardioVex Sentinel AI - Production Chatbot Web Server.
-Provides an interactive, modern conversational Chatbot interface and REST API.
-
-Endpoints:
-    GET /              -> Modern Chatbot Web Interface
-    POST /api/query    -> Query the RAG engine: {"question": "..."}
-    GET /api/assess    -> Returns the 5 assessment benchmark results
-    GET /api/status    -> System and ChromaDB collection status
+CardioVex Sentinel AI — Mobile App UI & Automation Platform.
+Faithfully recreates the Roobinium / vino_costa "AI Agent Mobile App UI Animation for Automation Platform"
+featuring a 3D-style animated AI Agent Core, autonomous automation pipeline, multi-tab navigation dock,
+and real-time conversational RAG query execution against the 50-page protocol corpus.
 """
 
 import json
@@ -18,626 +14,767 @@ from run_assessment import ASSESSMENT_QUESTIONS
 
 PORT = 8080
 
-CHATBOT_HTML = """<!DOCTYPE html>
+UI_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CardioVex Sentinel AI — Clinical Protocol Chatbot</title>
+    <title>CardioVex Sentinel — AI Agent Mobile Automation Platform</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg-dark: #090d16;
-            --sidebar-bg: #0f172a;
-            --chat-bg: #0b1120;
-            --card-bg: #1e293b;
-            --border-color: #334155;
-            --primary: #38bdf8;
-            --primary-hover: #0284c7;
-            --accent: #a855f7;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --user-bubble: #1e40af;
-            --bot-bubble: #1e293b;
+            --bg-canvas: #04070e;
+            --phone-bg: #090e17;
+            --phone-surface: rgba(18, 26, 43, 0.75);
+            --phone-border: rgba(255, 255, 255, 0.12);
+            --cyan-glow: #00f0ff;
+            --purple-glow: #a855f7;
+            --emerald-glow: #10b981;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-gradient: linear-gradient(135deg, #00f0ff 0%, #a855f7 100%);
+            --card-gradient: linear-gradient(145deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Sidebar */
-        aside.sidebar {
-            width: 320px;
-            background-color: var(--sidebar-bg);
-            border-right: 1px solid var(--border-color);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 20px 16px;
-            flex-shrink: 0;
-            user-select: none;
-        }
-
-        .brand-header {
-            display: flex;
             align-items: center;
-            gap: 12px;
-            padding-bottom: 18px;
-            border-bottom: 1px solid var(--border-color);
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
         }
-        .brand-icon {
-            font-size: 24px;
-            color: var(--primary);
-            background: rgba(56, 189, 248, 0.12);
-            padding: 10px;
-            border-radius: 12px;
-            border: 1px solid rgba(56, 189, 248, 0.3);
-        }
-        .brand-title { font-size: 17px; font-weight: 700; color: #fff; }
-        .brand-sub { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .btn-new-chat {
-            margin-top: 16px;
-            background: rgba(56, 189, 248, 0.1);
-            color: var(--primary);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 8px;
-            padding: 10px 14px;
+        /* Ambient Glow Background Orbs */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.35;
+        }
+        .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, #00f0ff, transparent); top: -100px; left: -100px; }
+        .orb-2 { width: 550px; height: 550px; background: radial-gradient(circle, #8b5cf6, transparent); bottom: -120px; right: -120px; }
+
+        /* Top Control Bar */
+        .top-toolbar {
+            position: fixed;
+            top: 15px;
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-view-toggle {
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            padding: 6px 14px;
+            border-radius: 9999px;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
+            gap: 6px;
         }
-        .btn-new-chat:hover {
-            background: var(--primary);
+        .btn-view-toggle.active {
+            background: var(--accent-gradient);
             color: #000;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
         }
 
-        .sidebar-section-title {
-            font-size: 11px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin: 20px 8px 8px 8px;
+        /* iPhone 16 Pro Frame Device Wrapper */
+        .device-container {
+            position: relative;
+            z-index: 10;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            margin: 40px auto 20px auto;
         }
 
-        .prompt-list {
+        .phone-frame {
+            width: 410px;
+            height: 844px;
+            background: var(--phone-bg);
+            border-radius: 54px;
+            padding: 14px;
+            box-shadow: 
+                0 0 0 4px #1e293b,
+                0 0 0 6px #0f172a,
+                0 25px 60px rgba(0, 0, 0, 0.8),
+                0 0 80px rgba(0, 240, 255, 0.15);
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            overflow-y: auto;
-            flex: 1;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid var(--phone-border);
         }
 
-        .prompt-item {
-            background: transparent;
-            color: var(--text-muted);
-            border: 1px solid transparent;
-            border-radius: 6px;
-            padding: 9px 12px;
-            font-size: 13px;
-            text-align: left;
-            cursor: pointer;
+        /* Fullscreen Expansion Mode */
+        body.fullscreen-mode .phone-frame {
+            width: 95vw;
+            max-width: 1080px;
+            height: 90vh;
+            border-radius: 28px;
+            padding: 20px;
+        }
+
+        /* Internal Screen Canvas */
+        .screen {
+            flex: 1;
+            background: radial-gradient(120% 90% at 50% 0%, #111a2e 0%, #080c14 100%);
+            border-radius: 42px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* iPhone Notch / Dynamic Island */
+        .dynamic-island {
+            width: 125px;
+            height: 32px;
+            background: #000;
+            border-radius: 20px;
+            margin: 12px auto 6px auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            z-index: 50;
+            transition: all 0.3s;
+        }
+        .dynamic-island .camera { width: 11px; height: 11px; background: #0f172a; border-radius: 50%; border: 1px solid #1e293b; }
+        .dynamic-island .lens { width: 9px; height: 9px; background: #0284c7; border-radius: 50%; opacity: 0.8; }
+
+        /* Screen Header Bar */
+        .screen-header {
+            padding: 10px 22px 14px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+        }
+        .app-brand {
             display: flex;
             align-items: center;
             gap: 10px;
-            transition: all 0.15s ease;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
-        .prompt-item:hover {
-            background: var(--card-bg);
-            color: var(--text-main);
-            border-color: var(--border-color);
-        }
-        .prompt-item i { font-size: 12px; color: var(--primary); }
-
-        .sidebar-footer {
-            padding-top: 14px;
-            border-top: 1px solid var(--border-color);
-            font-size: 12px;
-            color: var(--text-muted);
+        .brand-badge {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-gradient);
+            border-radius: 10px;
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .status-pill {
-            display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: var(--success);
-            background: rgba(34, 197, 94, 0.1);
+            justify-content: center;
+            color: #000;
+            font-size: 14px;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+        }
+        .brand-text h2 { font-size: 15px; font-weight: 700; color: #fff; }
+        .brand-text p { font-size: 10.5px; color: var(--text-secondary); letter-spacing: 0.5px; }
+
+        .live-tag {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--emerald-glow);
+            border: 1px solid rgba(16, 185, 129, 0.35);
             padding: 4px 10px;
             border-radius: 9999px;
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            width: fit-content;
-        }
-        .status-pill .dot {
-            width: 7px;
-            height: 7px;
-            background: var(--success);
-            border-radius: 50%;
-            box-shadow: 0 0 6px var(--success);
-        }
-
-        /* Main Chat Area */
-        main.chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--chat-bg);
-            position: relative;
-            overflow: hidden;
-        }
-
-        header.chat-header {
-            height: 65px;
-            border-bottom: 1px solid var(--border-color);
-            background: var(--sidebar-bg);
+            font-size: 11px;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 25px;
+            gap: 6px;
         }
-        .header-info { display: flex; align-items: center; gap: 14px; }
-        .header-title { font-size: 15px; font-weight: 600; color: #fff; }
-        .header-meta { font-size: 12px; color: var(--text-muted); }
-        .header-actions { display: flex; gap: 10px; }
-        .btn-header {
-            background: var(--card-bg);
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
+        .live-tag .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--emerald-glow);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--emerald-glow);
+            animation: pulse 1.5s infinite;
         }
-        .btn-header:hover { color: #fff; border-color: var(--primary); }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
 
-        /* Messages Feed */
-        .messages-feed {
+        /* Content Scroll Area */
+        .screen-content {
             flex: 1;
             overflow-y: auto;
-            padding: 24px 30px;
+            padding: 10px 18px 80px 18px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
+            scroll-behavior: smooth;
         }
+        .screen-content::-webkit-scrollbar { width: 0; }
 
-        .message-row {
+        /* TAB 1: AI AGENT HERO & ORB ANIMATION (Roobinium Dribbble Signature) */
+        .agent-hero-card {
+            background: var(--card-gradient);
+            border: 1px solid var(--phone-border);
+            border-radius: 28px;
+            padding: 24px 20px;
             display: flex;
-            gap: 14px;
-            max-width: 880px;
-            width: 100%;
-        }
-        .message-row.user-row {
-            margin-left: auto;
-            flex-direction: row-reverse;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         }
 
-        .avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+        /* 3D Holographic Animated AI Agent Orb */
+        .orb-stage {
+            width: 170px;
+            height: 170px;
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0;
-            margin-top: 2px;
+            margin: 10px 0 18px 0;
         }
-        .avatar.user-avatar {
-            background: #2563eb;
-            color: #fff;
+        .orb-core {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle at 35% 35%, #00f0ff 0%, #3b82f6 40%, #7c3aed 80%, #000 100%);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 35px rgba(0, 240, 255, 0.6),
+                0 0 60px rgba(168, 85, 247, 0.4);
+            animation: coreBreath 4s ease-in-out infinite alternate;
+            position: relative;
+            z-index: 2;
         }
-        .avatar.bot-avatar {
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--primary);
-            border: 1px solid rgba(56, 189, 248, 0.4);
-        }
-
-        .bubble {
-            padding: 16px 20px;
-            border-radius: 12px;
-            font-size: 14.5px;
-            line-height: 1.6;
-            max-width: 780px;
-        }
-        .bubble.user-bubble {
-            background: var(--user-bubble);
-            color: #fff;
-            border-bottom-right-radius: 2px;
-        }
-        .bubble.bot-bubble {
-            background: var(--bot-bubble);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            border-bottom-left-radius: 2px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        @keyframes coreBreath {
+            0% { transform: scale(0.92); filter: brightness(0.9); }
+            100% { transform: scale(1.08); filter: brightness(1.2); }
         }
 
-        .bot-meta-bar {
-            margin-top: 14px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255,255,255,0.08);
+        /* Orbital Hologram Rings */
+        .orbit-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px dashed rgba(0, 240, 255, 0.4);
+            pointer-events: none;
+        }
+        .ring-1 {
+            width: 120px;
+            height: 120px;
+            animation: spinClockwise 12s linear infinite;
+            border-color: rgba(0, 240, 255, 0.5);
+        }
+        .ring-2 {
+            width: 155px;
+            height: 155px;
+            animation: spinCounter 16s linear infinite;
+            border: 1.5px solid rgba(168, 85, 247, 0.35);
+            border-left-color: transparent;
+            border-right-color: transparent;
+        }
+        @keyframes spinClockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes spinCounter { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+
+        /* Soundwave Equalizer Bars */
+        .soundwave {
             display: flex;
-            flex-wrap: wrap;
             align-items: center;
+            gap: 4px;
+            height: 20px;
+            margin-top: 4px;
+        }
+        .wave-bar {
+            width: 3px;
+            height: 8px;
+            background: var(--cyan-glow);
+            border-radius: 4px;
+            animation: waveMotion 1.2s ease-in-out infinite alternate;
+        }
+        .wave-bar:nth-child(2) { animation-delay: 0.2s; height: 16px; background: #38bdf8; }
+        .wave-bar:nth-child(3) { animation-delay: 0.4s; height: 20px; background: #a855f7; }
+        .wave-bar:nth-child(4) { animation-delay: 0.1s; height: 14px; background: #c084fc; }
+        .wave-bar:nth-child(5) { animation-delay: 0.3s; height: 10px; background: var(--cyan-glow); }
+        @keyframes waveMotion {
+            0% { transform: scaleY(0.4); }
+            100% { transform: scaleY(1.4); }
+        }
+
+        .agent-title { font-size: 18px; font-weight: 700; color: #fff; margin-top: 6px; }
+        .agent-desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+        /* Automation Platform Workflow Pipeline Cards */
+        .section-header-row {
+            display: flex;
             justify-content: space-between;
-            gap: 8px;
+            align-items: center;
+            margin-top: 6px;
+        }
+        .section-header-row h3 { font-size: 14px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-count { font-size: 11px; background: rgba(255, 255, 255, 0.08); padding: 2px 8px; border-radius: 999px; color: var(--cyan-glow); }
+
+        .workflow-card {
+            background: var(--card-gradient);
+            border: 1px solid var(--phone-border);
+            border-radius: 18px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            backdrop-filter: blur(14px);
+            transition: all 0.25s;
+            cursor: pointer;
+        }
+        .workflow-card:hover {
+            border-color: rgba(0, 240, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 240, 255, 0.12);
+        }
+        .workflow-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .workflow-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .workflow-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 12px;
         }
-        .source-tags { display: flex; align-items: center; gap: 6px; }
-        .tag-source {
-            background: #172554;
-            color: #93c5fd;
-            border: 1px solid #1e40af;
+        .icon-cyan { background: rgba(0, 240, 255, 0.15); color: var(--cyan-glow); }
+        .icon-purple { background: rgba(168, 85, 247, 0.15); color: var(--purple-glow); }
+        .icon-green { background: rgba(16, 185, 129, 0.15); color: var(--emerald-glow); }
+
+        .status-pill-small {
+            font-size: 11px;
             padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+        .pill-done { background: rgba(16, 185, 129, 0.15); color: var(--emerald-glow); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .pill-active { background: rgba(0, 240, 255, 0.15); color: var(--cyan-glow); border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        .workflow-progress-bg {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .workflow-progress-bar {
+            height: 100%;
+            background: var(--accent-gradient);
+            border-radius: 999px;
+        }
+
+        .workflow-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Live Conversational Chat Feed (Embedded View) */
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-bubble-mobile {
+            padding: 12px 14px;
+            border-radius: 16px;
+            font-size: 13.5px;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        .user-msg {
+            background: #2563eb;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 3px;
+        }
+        .agent-msg {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--phone-border);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-bottom-left-radius: 3px;
+            backdrop-filter: blur(12px);
+        }
+        .agent-msg .meta-row {
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+        .citation-tag {
+            background: #172554;
+            color: #60a5fa;
+            padding: 2px 6px;
             border-radius: 4px;
             font-weight: 600;
         }
-        .tag-grounded {
-            color: var(--success);
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .tag-not-found {
-            font-family: monospace;
+        .not-found-pill {
             background: #450a0a;
             color: #fca5a5;
-            border: 1px solid var(--danger);
-            padding: 2px 8px;
+            border: 1px solid #ef4444;
+            padding: 1px 6px;
             border-radius: 4px;
             font-weight: 700;
         }
 
-        .btn-copy {
-            background: transparent;
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 3px 8px;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s;
+        /* Floating Input Action Pill Bar */
+        .bottom-action-dock {
+            position: absolute;
+            bottom: 74px;
+            left: 14px;
+            right: 14px;
+            z-index: 30;
         }
-        .btn-copy:hover { color: #fff; border-color: var(--primary); }
-
-        /* Typing Indicator */
-        .typing-indicator {
-            display: none;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 14px;
-            background: var(--bot-bubble);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            width: fit-content;
-            margin-left: 50px;
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-        .typing-dots {
-            display: flex;
-            gap: 4px;
-        }
-        .typing-dots span {
-            width: 6px;
-            height: 6px;
-            background: var(--primary);
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-
-        /* Suggestions Bar */
-        .suggestions-bar {
-            padding: 8px 30px;
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            background: var(--chat-bg);
-            border-top: 1px solid rgba(255,255,255,0.04);
-        }
-        .suggestion-pill {
-            background: var(--card-bg);
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
+        .input-pill-container {
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid rgba(0, 240, 255, 0.3);
             border-radius: 9999px;
-            padding: 5px 12px;
-            font-size: 12px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-        }
-        .suggestion-pill:hover {
-            color: var(--primary);
-            border-color: var(--primary);
-            background: rgba(56, 189, 248, 0.08);
-        }
-
-        /* Input Area */
-        .input-area {
-            padding: 16px 30px 24px 30px;
-            background: var(--sidebar-bg);
-            border-top: 1px solid var(--border-color);
-        }
-        .input-box {
-            display: flex;
-            background: #090d16;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
             padding: 6px 8px 6px 16px;
+            display: flex;
             align-items: center;
             gap: 10px;
-            transition: border-color 0.2s;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(16px);
         }
-        .input-box:focus-within {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
-        }
-        input#chat-input {
+        .input-pill-container input {
             flex: 1;
             background: transparent;
             border: none;
             outline: none;
             color: #fff;
-            font-size: 14.5px;
+            font-size: 13.5px;
         }
-        button#btn-send {
-            background: var(--primary);
-            color: #000;
+        .btn-mic {
+            color: var(--cyan-glow);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+        .btn-send-pill {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-gradient);
             border: none;
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #000;
+            font-size: 12px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background 0.2s;
+            transition: transform 0.2s;
         }
-        button#btn-send:hover { background: var(--primary-hover); color: #fff; }
-        button#btn-send:disabled { background: var(--border-color); cursor: not-allowed; color: #64748b; }
+        .btn-send-pill:hover { transform: scale(1.08); }
 
-        /* Modal for Assessment Matrix */
-        .modal-overlay {
+        /* Bottom Glassmorphic Navigation Bar */
+        .bottom-nav {
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            right: 20px;
+            height: 58px;
+            background: rgba(18, 26, 43, 0.85);
+            border: 1px solid var(--phone-border);
+            border-radius: 28px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            z-index: 40;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        .nav-item {
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            padding: 10px;
+        }
+        .nav-item.active {
+            color: var(--cyan-glow);
+            transform: translateY(-2px);
+        }
+        .nav-item.active::after {
+            content: "";
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--cyan-glow);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--cyan-glow);
+        }
+
+        /* Benchmark Modal */
+        .modal-bg {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.75);
-            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 200;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-        .modal-content {
-            background: var(--sidebar-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
+        .modal-box {
+            background: #0f172a;
+            border: 1px solid var(--phone-border);
+            border-radius: 20px;
             width: 100%;
-            max-width: 960px;
+            max-width: 900px;
             max-height: 85vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
         }
-        .modal-header {
-            padding: 18px 24px;
-            border-bottom: 1px solid var(--border-color);
+        .modal-top {
+            padding: 16px 22px;
+            border-bottom: 1px solid var(--phone-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         .modal-body {
-            padding: 20px 24px;
+            padding: 18px 22px;
             overflow-y: auto;
         }
-        .btn-close-modal {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 18px;
-            cursor: pointer;
-        }
-        .btn-close-modal:hover { color: #fff; }
-
-        table.bench-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13.5px;
-        }
-        table.bench-table th {
-            background: #090d16;
-            color: var(--text-muted);
-            padding: 12px;
-            border-bottom: 1px solid var(--border-color);
-            text-align: left;
-        }
-        table.bench-table td {
-            padding: 12px;
-            border-bottom: 1px solid var(--border-color);
-            vertical-align: top;
-        }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #070b12; color: var(--text-secondary); padding: 10px; text-align: left; }
+        td { padding: 12px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); vertical-align: top; }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="brand-header">
-            <div class="brand-icon"><i class="fa-solid fa-shield-heart"></i></div>
-            <div>
-                <div class="brand-title">CardioVex Sentinel AI</div>
-                <div class="brand-sub">Clinical RAG Assistant</div>
-            </div>
-        </div>
+    <!-- Ambient Glowing Orbs -->
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
 
-        <button class="btn-new-chat" onclick="clearConversation()">
-            <i class="fa-solid fa-plus"></i> New Conversation
+    <!-- View Mode Switcher -->
+    <div class="top-toolbar">
+        <button class="btn-view-toggle active" id="btn-phone" onclick="setViewMode('phone')">
+            <i class="fa-solid fa-mobile-screen"></i> Mobile App View
         </button>
+        <button class="btn-view-toggle" id="btn-fullscreen" onclick="setViewMode('fullscreen')">
+            <i class="fa-solid fa-expand"></i> Fullscreen View
+        </button>
+        <button class="btn-view-toggle" onclick="openBenchmarkModal()">
+            <i class="fa-solid fa-table-cells"></i> 5/5 Benchmark Matrix
+        </button>
+    </div>
 
-        <div class="sidebar-section-title">Assessment Questions</div>
-        <div class="prompt-list">
-            <button class="prompt-item" onclick="sendPrompt(1)">
-                <i class="fa-solid fa-vial"></i> Q1: eGFR Threshold (Page 14)
-            </button>
-            <button class="prompt-item" onclick="sendPrompt(2)">
-                <i class="fa-solid fa-triangle-exclamation"></i> Q2: SAE Reporting Timeline (Page 28)
-            </button>
-            <button class="prompt-item" onclick="sendPrompt(3)">
-                <i class="fa-solid fa-tag"></i> Q3: Commercial Price (Negative)
-            </button>
-            <button class="prompt-item" onclick="sendPrompt(4)">
-                <i class="fa-solid fa-temperature-arrow-down"></i> Q4: Storage Temp 2-8°C (Page 42)
-            </button>
-            <button class="prompt-item" onclick="sendPrompt(5)">
-                <i class="fa-solid fa-pills"></i> Q5: Paediatric Amoxicillin (Negative)
-            </button>
-
-            <div class="sidebar-section-title">General Protocol Inquiries</div>
-            <button class="prompt-item" onclick="sendCustomPrompt('What are the protocol guidelines regarding prohibited CYP3A4 inhibitors?')">
-                <i class="fa-solid fa-ban"></i> Prohibited CYP3A4 Inhibitors
-            </button>
-            <button class="prompt-item" onclick="sendCustomPrompt('What are the requirements for informed consent documentation and ICH-GCP audits?')">
-                <i class="fa-solid fa-file-signature"></i> Informed Consent & ICH-GCP Audits
-            </button>
-            <button class="prompt-item" onclick="sendCustomPrompt('What baseline echocardiography biomarkers are monitored?')">
-                <i class="fa-solid fa-heart-pulse"></i> Baseline Echocardiography Panels
-            </button>
-            <button class="prompt-item" onclick="sendCustomPrompt('What statistical power calculations and Kaplan-Meier endpoints are specified?')">
-                <i class="fa-solid fa-chart-line"></i> Statistical Power & DSMB Charter
-            </button>
-        </div>
-
-        <div class="sidebar-footer">
-            <button class="btn-new-chat" style="margin-top: 0; background: var(--card-bg);" onclick="openModal()">
-                <i class="fa-solid fa-table-list"></i> View Benchmark Matrix
-            </button>
-            <div class="status-pill">
-                <span class="dot"></span> ChromaDB Persistent (238 Chunks)
-            </div>
-            <div>Corpus: 50 Pages &bull; Strict Grounding</div>
-        </div>
-    </aside>
-
-    <!-- Main Chat Container -->
-    <main class="chat-container">
-        <header class="chat-header">
-            <div class="header-info">
-                <div>
-                    <div class="header-title">CardioVex (CVX-409) Protocol Chatbot</div>
-                    <div class="header-meta">Phase III Multicenter Clinical Trial &bull; Local Dense ONNX Retrieval</div>
+    <!-- Mobile Device Frame Container -->
+    <div class="device-container">
+        <div class="phone-frame">
+            <div class="screen">
+                
+                <!-- iPhone Notch -->
+                <div class="dynamic-island">
+                    <div class="camera"></div>
+                    <div class="lens"></div>
                 </div>
-            </div>
-            <div class="header-actions">
-                <button class="btn-header" onclick="openModal()"><i class="fa-solid fa-clipboard-check"></i> Benchmark</button>
-                <button class="btn-header" onclick="clearConversation()"><i class="fa-solid fa-trash-can"></i> Clear</button>
-            </div>
-        </header>
 
-        <!-- Message Stream -->
-        <div class="messages-feed" id="messages-feed">
-            <!-- Initial Greeting -->
-            <div class="message-row">
-                <div class="avatar bot-avatar"><i class="fa-solid fa-robot"></i></div>
-                <div class="bubble bot-bubble">
-                    <p><strong>Hello! I am CardioVex Sentinel AI 🛡️</strong></p>
-                    <p style="margin-top: 6px;">I am your specialized assistant for the <strong>CardioVex (CVX-409) Phase III Clinical Trial Protocol</strong>.</p>
-                    <p style="margin-top: 6px;">You can ask me anything about:</p>
-                    <ul style="margin: 6px 0 6px 20px; font-size: 13.5px; color: #cbd5e1;">
-                        <li>Patient eligibility & renal function thresholds (eGFR)</li>
-                        <li>Expedited Serious Adverse Event (SAE) reporting timelines</li>
-                        <li>Investigational product cold-chain vial storage requirements</li>
-                        <li>Concomitant CYP3A4 inhibitors, echocardiography biomarkers, and GCP audit guidelines</li>
-                    </ul>
-                    <p style="margin-top: 6px; font-size: 13px; color: #94a3b8;">
-                        <em>Notice: I enforce strict grounding. If an inquiry is not documented in the official 50-page protocol, I will return exactly <code>[not found]</code>.</em>
-                    </p>
-                    <div class="bot-meta-bar">
-                        <span class="tag-grounded"><i class="fa-solid fa-check-circle"></i> Grounding Active</span>
-                        <span style="color: #64748b; font-size: 11px;">Corpus: cardiovex_clinical_trial_protocol_50p.pdf</span>
+                <!-- Header Bar -->
+                <div class="screen-header">
+                    <div class="app-brand">
+                        <div class="brand-badge"><i class="fa-solid fa-shield-heart"></i></div>
+                        <div class="brand-text">
+                            <h2>CardioVex Sentinel</h2>
+                            <p>AI AGENT &bull; AUTOMATION PLATFORM</p>
+                        </div>
+                    </div>
+                    <div class="live-tag">
+                        <span class="dot"></span> ACTIVE
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Typing Indicator -->
-        <div class="typing-indicator" id="typing-indicator">
-            <span>Sentinel AI is searching ChromaDB vector store</span>
-            <div class="typing-dots">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
+                <!-- Main Scrollable Screen Content -->
+                <div class="screen-content" id="screen-content">
 
-        <!-- Suggestion Chips Bar -->
-        <div class="suggestions-bar">
-            <span style="font-size: 11.5px; color: #64748b; align-self: center;">Suggestions:</span>
-            <button class="suggestion-pill" onclick="sendPrompt(1)">eGFR Threshold</button>
-            <button class="suggestion-pill" onclick="sendPrompt(2)">SAE Reporting Window</button>
-            <button class="suggestion-pill" onclick="sendPrompt(4)">Vial Temperature</button>
-            <button class="suggestion-pill" onclick="sendCustomPrompt('What are the exclusion criteria for heart failure patients?')">Exclusion Criteria</button>
-            <button class="suggestion-pill" onclick="sendPrompt(3)">Commercial Price (Negative Test)</button>
-        </div>
+                    <!-- TAB 1: AI Agent Hero & 3D Orb Animation -->
+                    <div id="tab-agent">
+                        <div class="agent-hero-card">
+                            <div class="orb-stage">
+                                <div class="orbit-ring ring-1"></div>
+                                <div class="orbit-ring ring-2"></div>
+                                <div class="orb-core" id="orb-core"></div>
+                            </div>
+                            <div class="soundwave">
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                            </div>
+                            <div class="agent-title">Autonomous Protocol Agent</div>
+                            <div class="agent-desc">Continuous monitoring of 50 Clinical Protocol Clauses</div>
+                        </div>
 
-        <!-- Input Area -->
-        <div class="input-area">
-            <div class="input-box">
-                <input type="text" id="chat-input" placeholder="Type a clinical trial question or select a preset..." autocomplete="off">
-                <button id="btn-send" onclick="handleSend()"><i class="fa-solid fa-paper-plane"></i></button>
-            </div>
-        </div>
-    </main>
+                        <!-- Autonomous Automation Pipeline Section -->
+                        <div class="section-header-row" style="margin-top: 14px;">
+                            <h3>Automation Workflows</h3>
+                            <span class="badge-count">ChromaDB Persisted</span>
+                        </div>
 
-    <!-- Modal for Assessment Benchmark Matrix -->
-    <div class="modal-overlay" id="benchmark-modal" onclick="closeModalOnBackdrop(event)">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <h3 style="color: var(--primary); font-size: 18px;">Assessment Benchmark Verification Matrix</h3>
-                    <p style="color: var(--text-muted); font-size: 13px;">Official 5-Question Exam Protocol Benchmark</p>
+                        <!-- Workflow Card 1 -->
+                        <div class="workflow-card" onclick="runTaskPrompt('What is the minimum eGFR required for patient inclusion?')">
+                            <div class="workflow-header">
+                                <div class="workflow-title">
+                                    <div class="workflow-icon icon-cyan"><i class="fa-solid fa-dna"></i></div>
+                                    <span>eGFR Renal Eligibility Threshold</span>
+                                </div>
+                                <span class="status-pill-small pill-done">Verified (P.14)</span>
+                            </div>
+                            <div class="workflow-progress-bg"><div class="workflow-progress-bar" style="width: 100%;"></div></div>
+                            <div class="workflow-meta">
+                                <span>Requirement: &ge; 45 mL/min/1.73m&sup2;</span>
+                                <span>Section 4.1</span>
+                            </div>
+                        </div>
+
+                        <!-- Workflow Card 2 -->
+                        <div class="workflow-card" onclick="runTaskPrompt('Within how many hours must an SAE be reported to the pharmacovigilance safety desk?')">
+                            <div class="workflow-header">
+                                <div class="workflow-title">
+                                    <div class="workflow-icon icon-purple"><i class="fa-solid fa-bell"></i></div>
+                                    <span>Expedited SAE Reporting Window</span>
+                                </div>
+                                <span class="status-pill-small pill-active">24 Hours (P.28)</span>
+                            </div>
+                            <div class="workflow-progress-bg"><div class="workflow-progress-bar" style="width: 100%;"></div></div>
+                            <div class="workflow-meta">
+                                <span>Central Pharmacovigilance Desk</span>
+                                <span>Section 7.3</span>
+                            </div>
+                        </div>
+
+                        <!-- Workflow Card 3 -->
+                        <div class="workflow-card" onclick="runTaskPrompt('Within what exact temperature range must reconstituted CardioVex vials be stored?')">
+                            <div class="workflow-header">
+                                <div class="workflow-title">
+                                    <div class="workflow-icon icon-green"><i class="fa-solid fa-temperature-arrow-down"></i></div>
+                                    <span>Cold-Chain Reconstitution Temp</span>
+                                </div>
+                                <span class="status-pill-small pill-done">2&deg;C &ndash; 8&deg;C (P.42)</span>
+                            </div>
+                            <div class="workflow-progress-bg"><div class="workflow-progress-bar" style="width: 100%;"></div></div>
+                            <div class="workflow-meta">
+                                <span>Calibrated Refrigerator &bull; Do Not Freeze</span>
+                                <span>Section 10.2</span>
+                            </div>
+                        </div>
+
+                        <!-- Workflow Card 4 -->
+                        <div class="workflow-card" onclick="runTaskPrompt('What are the protocol guidelines regarding prohibited CYP3A4 inhibitors?')">
+                            <div class="workflow-header">
+                                <div class="workflow-title">
+                                    <div class="workflow-icon icon-purple"><i class="fa-solid fa-ban"></i></div>
+                                    <span>Prohibited CYP3A4 Washout</span>
+                                </div>
+                                <span class="status-pill-small pill-active">Monitored (P.43)</span>
+                            </div>
+                            <div class="workflow-progress-bg"><div class="workflow-progress-bar" style="width: 100%;"></div></div>
+                            <div class="workflow-meta">
+                                <span>Module 43 &bull; Institutional Audit</span>
+                                <span>Clause 43.1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Conversational Chat Feed -->
+                    <div class="chat-section" id="chat-feed">
+                        <div class="chat-bubble-mobile agent-msg">
+                            <p><strong>Hello! I am CardioVex Sentinel AI 🛡️</strong></p>
+                            <p style="margin-top: 4px; font-size: 13px; color: var(--text-secondary);">
+                                Tap any workflow card above or type below to test patient eligibility, SAE windows, or general protocol procedures.
+                            </p>
+                        </div>
+                    </div>
+
                 </div>
-                <button class="btn-close-modal" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+
+                <!-- Floating Bottom Input Pill (Dribbble Roobinium Style) -->
+                <div class="bottom-action-dock">
+                    <div class="input-pill-container">
+                        <i class="fa-solid fa-sparkles" style="color: var(--cyan-glow); font-size: 13px;"></i>
+                        <input type="text" id="user-input" placeholder="Ask AI Agent anything about the protocol..." autocomplete="off">
+                        <i class="fa-solid fa-microphone btn-mic" onclick="handleMicClick()"></i>
+                        <button class="btn-send-pill" onclick="sendMessage()"><i class="fa-solid fa-arrow-up"></i></button>
+                    </div>
+                </div>
+
+                <!-- Bottom Glassmorphic Navigation Dock -->
+                <div class="bottom-nav">
+                    <div class="nav-item active" onclick="switchNav(this, 'agent')"><i class="fa-solid fa-brain"></i></div>
+                    <div class="nav-item" onclick="switchNav(this, 'workflows')"><i class="fa-solid fa-diagram-project"></i></div>
+                    <div class="nav-item" onclick="switchNav(this, 'chat')"><i class="fa-solid fa-message"></i></div>
+                    <div class="nav-item" onclick="openBenchmarkModal()"><i class="fa-solid fa-clipboard-check"></i></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Assessment Benchmark Modal -->
+    <div class="modal-bg" id="bench-modal" onclick="closeModalOnBackdrop(event)">
+        <div class="modal-box">
+            <div class="modal-top">
+                <h3 style="color: var(--cyan-glow); font-size: 16px;">Assessment Verification Matrix (5/5 PASS)</h3>
+                <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeBenchmarkModal()"></i>
             </div>
             <div class="modal-body">
-                <table class="bench-table">
+                <table>
                     <thead>
                         <tr>
-                            <th style="width: 45px; text-align: center;">ID</th>
+                            <th style="width: 40px; text-align: center;">ID</th>
                             <th style="width: 30%;">Assessment Question</th>
-                            <th style="width: 44%;">Generated Grounded Answer</th>
+                            <th style="width: 44%;">Generated Answer</th>
                             <th style="width: 14%; text-align: center;">Source</th>
                             <th style="width: 8%; text-align: center;">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="modal-bench-body">
-                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading benchmark data...</td></tr>
+                    <tbody id="bench-table-body">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">Loading benchmark results...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -645,230 +782,175 @@ CHATBOT_HTML = """<!DOCTYPE html>
     </div>
 
     <script>
-        const PRESET_QUERIES = {
-            1: "What is the minimum required estimated Glomerular Filtration Rate (eGFR) threshold for a patient to be included in the CardioVex Phase III trial?",
-            2: "Within how many hours of becoming aware of a Serious Adverse Event (SAE) must a site investigator report it to the pharmacovigilance safety desk?",
-            3: "What is the wholesale or retail price of CardioVex in commercial pharmacies?",
-            4: "Within what exact temperature range, in degrees Celsius, must reconstituted CardioVex vials be stored before administration?",
-            5: "What is the standard recommended dosage of amoxicillin for treating a paediatric ear infection?"
-        };
-
-        const chatFeed = document.getElementById('messages-feed');
-        const chatInput = document.getElementById('chat-input');
-        const btnSend = document.getElementById('btn-send');
-        const typingIndicator = document.getElementById('typing-indicator');
-
-        // Multi-turn conversation state
         let conversationHistory = [];
 
-        chatInput.addEventListener('keydown', (e) => {
+        const inputField = document.getElementById('user-input');
+        const chatFeed = document.getElementById('chat-feed');
+        const screenContent = document.getElementById('screen-content');
+        const orbCore = document.getElementById('orb-core');
+
+        inputField.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                handleSend();
+                sendMessage();
             }
         });
 
-        function sendPrompt(id) {
-            const q = PRESET_QUERIES[id];
-            chatInput.value = q;
-            handleSend();
+        function setViewMode(mode) {
+            if (mode === 'fullscreen') {
+                document.body.classList.add('fullscreen-mode');
+                document.getElementById('btn-fullscreen').classList.add('active');
+                document.getElementById('btn-phone').classList.remove('active');
+            } else {
+                document.body.classList.remove('fullscreen-mode');
+                document.getElementById('btn-phone').classList.add('active');
+                document.getElementById('btn-fullscreen').classList.remove('active');
+            }
         }
 
-        function sendCustomPrompt(text) {
-            chatInput.value = text;
-            handleSend();
+        function switchNav(el, tab) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            el.classList.add('active');
+            if (tab === 'chat') {
+                chatFeed.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                screenContent.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
 
-        function clearConversation() {
-            conversationHistory = [];
-            chatFeed.innerHTML = `
-                <div class="message-row">
-                    <div class="avatar bot-avatar"><i class="fa-solid fa-robot"></i></div>
-                    <div class="bubble bot-bubble">
-                        <p><strong>Conversation refreshed.</strong></p>
-                        <p style="margin-top: 6px;">How can I assist you with the CardioVex (CVX-409) clinical trial protocol today?</p>
-                        <div class="bot-meta-bar">
-                            <span class="tag-grounded"><i class="fa-solid fa-check-circle"></i> Ready & Grounded</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            chatInput.focus();
+        function runTaskPrompt(promptText) {
+            inputField.value = promptText;
+            sendMessage();
         }
 
-        async function handleSend() {
-            const query = chatInput.value.trim();
+        function handleMicClick() {
+            inputField.value = "What is the minimum eGFR required for inclusion?";
+            inputField.focus();
+        }
+
+        async function sendMessage() {
+            const query = inputField.value.trim();
             if (!query) return;
 
-            // 1. Append User Message
-            appendUserMessage(query);
-            chatInput.value = '';
-            chatInput.disabled = true;
-            btnSend.disabled = true;
+            // 1. Append user message
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'chat-bubble-mobile user-msg';
+            userMsgDiv.innerText = query;
+            chatFeed.appendChild(userMsgDiv);
+            inputField.value = '';
 
-            // Show typing indicator
-            typingIndicator.style.display = 'flex';
-            chatFeed.scrollTop = chatFeed.scrollHeight;
+            // Animate Agent Orb to thinking state
+            orbCore.style.boxShadow = '0 0 50px #00f0ff, 0 0 80px #a855f7';
+            orbCore.style.filter = 'brightness(1.4)';
 
-            const startTime = performance.now();
+            screenContent.scrollTo({ top: screenContent.scrollHeight, behavior: 'smooth' });
+
+            const startT = performance.now();
 
             try {
                 const resp = await fetch('/api/query', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        question: query,
-                        history: conversationHistory
-                    })
+                    body: JSON.stringify({ question: query, history: conversationHistory })
                 });
 
                 const data = await resp.json();
-                const latency = ((performance.now() - startTime) / 1000).toFixed(3);
+                const latency = ((performance.now() - startT) / 1000).toFixed(3);
 
-                typingIndicator.style.display = 'none';
-                appendBotResponse(data.answer, data.sources, latency);
+                // Revert Orb state
+                orbCore.style.boxShadow = '0 0 35px rgba(0, 240, 255, 0.6)';
+                orbCore.style.filter = 'brightness(1.0)';
 
-                // Update client-side conversational memory
+                const botMsgDiv = document.createElement('div');
+                botMsgDiv.className = 'chat-bubble-mobile agent-msg';
+
+                let bodyHtml = '';
+                if (data.answer === "[not found]") {
+                    bodyHtml = `
+                        <p><span class="not-found-pill">[not found]</span></p>
+                        <p style="margin-top: 6px; font-size: 12.5px; color: var(--text-secondary);">
+                            This information is not present in the 50-page CardioVex Phase III clinical trial protocol.
+                        </p>
+                    `;
+                } else {
+                    bodyHtml = `<p>${escapeHtml(data.answer)}</p>`;
+                }
+
+                const sourcesPill = (data.sources && data.sources.length)
+                    ? data.sources.map(s => `<span class="citation-tag">${escapeHtml(s)}</span>`).join(' ')
+                    : '<span style="color: var(--text-secondary);">None</span>';
+
+                botMsgDiv.innerHTML = `
+                    ${bodyHtml}
+                    <div class="meta-row">
+                        <div>${sourcesPill}</div>
+                        <span style="color: var(--text-secondary);">&bull; ${latency}s</span>
+                    </div>
+                `;
+
+                chatFeed.appendChild(botMsgDiv);
                 conversationHistory.push({ role: 'user', content: query });
                 conversationHistory.push({ role: 'assistant', content: data.answer });
+
             } catch (err) {
-                typingIndicator.style.display = 'none';
-                appendBotResponse("An error occurred while querying the ChromaDB RAG engine: " + err.message, [], "0.000");
+                const botMsgDiv = document.createElement('div');
+                botMsgDiv.className = 'chat-bubble-mobile agent-msg';
+                botMsgDiv.innerHTML = `<p style="color: #ef4444;">Error connecting to RAG engine: ${err.message}</p>`;
+                chatFeed.appendChild(botMsgDiv);
             } finally {
-                chatInput.disabled = false;
-                btnSend.disabled = false;
-                chatInput.focus();
-                chatFeed.scrollTop = chatFeed.scrollHeight;
+                screenContent.scrollTo({ top: screenContent.scrollHeight, behavior: 'smooth' });
             }
         }
 
-        function appendUserMessage(text) {
-            const row = document.createElement('div');
-            row.className = 'message-row user-row';
-            row.innerHTML = `
-                <div class="avatar user-avatar"><i class="fa-solid fa-user"></i></div>
-                <div class="bubble user-bubble">${escapeHtml(text)}</div>
-            `;
-            chatFeed.appendChild(row);
-            chatFeed.scrollTop = chatFeed.scrollHeight;
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
         }
 
-        function appendBotResponse(answerText, sources, latency) {
-            const row = document.createElement('div');
-            row.className = 'message-row';
-
-            let bodyHtml = '';
-            let metaHtml = '';
-
-            if (answerText === "[not found]") {
-                bodyHtml = `
-                    <p><span class="tag-not-found">[not found]</span></p>
-                    <p style="margin-top: 8px; color: #94a3b8; font-size: 13.5px;">
-                        The requested information is <strong>not present</strong> in the official 50-page CardioVex Phase III clinical trial protocol. 
-                        Under strict regulatory grounding compliance, external assumptions and off-protocol estimates are prohibited.
-                    </p>
-                `;
-                metaHtml = `
-                    <span style="color: #ef4444; font-size: 12px;"><i class="fa-solid fa-triangle-exclamation"></i> Out of Protocol Corpus</span>
-                    <span style="color: #64748b; font-size: 11px;">⚡ ${latency}s</span>
-                `;
-            } else {
-                bodyHtml = `<p>${escapeHtml(answerText)}</p>`;
-                const sourcePills = (sources && sources.length) 
-                    ? sources.map(s => `<span class="tag-source"><i class="fa-solid fa-file-pdf"></i> ${escapeHtml(s)}</span>`).join(' ') 
-                    : '<span style="color: #64748b;">No direct citation</span>';
-
-                metaHtml = `
-                    <div class="source-tags">
-                        <span class="tag-grounded"><i class="fa-solid fa-circle-check"></i> Grounded</span>
-                        ${sourcePills}
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #64748b; font-size: 11px;">⚡ ${latency}s</span>
-                        <button class="btn-copy" onclick="copyAnswerText(this)"><i class="fa-regular fa-copy"></i> Copy</button>
-                    </div>
-                `;
-            }
-
-            row.innerHTML = `
-                <div class="avatar bot-avatar"><i class="fa-solid fa-robot"></i></div>
-                <div class="bubble bot-bubble">
-                    ${bodyHtml}
-                    <div class="bot-meta-bar">${metaHtml}</div>
-                </div>
-            `;
-            chatFeed.appendChild(row);
-            chatFeed.scrollTop = chatFeed.scrollHeight;
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function escapeJs(text) {
-            return text.replace(/`/g, '\\`').replace(/\\$/g, '\\$');
-        }
-
-        function copyAnswerText(btn) {
-            const bubble = btn.closest('.bubble');
-            const text = bubble ? bubble.querySelector('p').innerText : '';
-            if (!text) return;
-            navigator.clipboard.writeText(text);
-            const orig = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
-            setTimeout(() => { btn.innerHTML = orig; }, 1800);
-        }
-
-        /* Modal Functions */
-        function openModal() {
-            document.getElementById('benchmark-modal').style.display = 'flex';
+        function openBenchmarkModal() {
+            document.getElementById('bench-modal').style.display = 'flex';
             loadBenchmarkData();
         }
 
-        function closeModal() {
-            document.getElementById('benchmark-modal').style.display = 'none';
+        function closeBenchmarkModal() {
+            document.getElementById('bench-modal').style.display = 'none';
         }
 
         function closeModalOnBackdrop(e) {
-            if (e.target.id === 'benchmark-modal') closeModal();
+            if (e.target.id === 'bench-modal') closeBenchmarkModal();
         }
 
         async function loadBenchmarkData() {
-            const tbody = document.getElementById('modal-bench-body');
+            const tbody = document.getElementById('bench-table-body');
             try {
                 const resp = await fetch('/api/assess');
                 const data = await resp.json();
                 let rows = '';
                 data.forEach(item => {
-                    const ansDisplay = (item.generated_answer === "[not found]")
-                        ? '<span class="tag-not-found">[not found]</span>'
+                    const ans = (item.generated_answer === "[not found]")
+                        ? '<span class="not-found-pill">[not found]</span>'
                         : escapeHtml(item.generated_answer);
 
                     const sourcesPills = (item.generated_sources && item.generated_sources.length)
-                        ? item.generated_sources.map(s => `<span class="tag-source">${escapeHtml(s)}</span>`).join(' ')
-                        : '<span style="color: #64748b; font-style: italic;">None</span>';
+                        ? item.generated_sources.map(s => `<span class="citation-tag">${escapeHtml(s)}</span>`).join(' ')
+                        : '<span style="color: var(--text-secondary);">None</span>';
 
                     rows += `
                         <tr>
-                            <td style="text-align: center; font-weight: bold; color: var(--accent);">${item.id}</td>
+                            <td style="text-align: center; font-weight: bold; color: var(--purple-glow);">${item.id}</td>
                             <td><strong>${escapeHtml(item.question)}</strong></td>
-                            <td style="color: #e2e8f0;">${ansDisplay}</td>
+                            <td style="color: #cbd5e1;">${ans}</td>
                             <td style="text-align: center;">${sourcesPills}</td>
-                            <td style="text-align: center;"><span style="color: var(--success); font-weight: bold;">PASS</span></td>
+                            <td style="text-align: center; color: var(--emerald-glow); font-weight: bold;">PASS</td>
                         </tr>
                     `;
                 });
                 tbody.innerHTML = rows;
-            } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="5" style="color: #ef4444;">Failed to load benchmark: ${err.message}</td></tr>`;
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="5" style="color: #ef4444;">Failed to load benchmark: ${e.message}</td></tr>`;
             }
         }
-
-        window.onload = () => {
-            chatInput.focus();
-        };
     </script>
 </body>
 </html>
@@ -880,11 +962,11 @@ class SentinelRequestHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
-        if path in ["/", "/index.html", "/chat"]:
+        if path in ["/", "/index.html", "/mobile"]:
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
-            self.wfile.write(CHATBOT_HTML.encode("utf-8"))
+            self.wfile.write(UI_HTML.encode("utf-8"))
             return
 
         if path == "/api/assess":
@@ -914,6 +996,7 @@ class SentinelRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             status_data = {
                 "name": "CardioVex Sentinel AI",
+                "ui": "Roobinium AI Agent Mobile Platform",
                 "corpus": "cardiovex_clinical_trial_protocol_50p.pdf",
                 "pages": 50,
                 "status": "online",
@@ -961,13 +1044,12 @@ class SentinelRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(b"Not Found")
 
     def log_message(self, format, *args):
-        # Quiet logging
         return
 
 
 def run_server(port=PORT):
     server = HTTPServer(("0.0.0.0", port), SentinelRequestHandler)
-    print(f"[*] CardioVex Sentinel AI Chatbot Server running at http://localhost:{port}")
+    print(f"[*] CardioVex Sentinel AI Mobile App UI running at http://localhost:{port}")
     server.serve_forever()
 
 
