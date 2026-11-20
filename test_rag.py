@@ -7,13 +7,13 @@ Validates:
 4. Correct source citation tracking.
 5. ChromaDB persistence without re-embedding.
 6. Robustness against invalid/empty inputs.
-
-Compatible with both unittest (standard library) and pytest.
+7. Multi-turn conversational follow-up questions with conversation history.
 """
 
 import unittest
 from rag_engine import answer
 from ingestion import build_vectorstore
+from conversation import ConversationManager
 
 
 class TestCardioVexSentinel(unittest.TestCase):
@@ -85,6 +85,26 @@ class TestCardioVexSentinel(unittest.TestCase):
         res = answer(q)
         self.assertEqual(res["answer"], "[not found]", "Out of domain question must return exactly [not found]")
         self.assertEqual(res["sources"], [], "Sources must be empty for [not found]")
+
+    def test_conversational_followup_dialogue(self):
+        """Verify conversational multi-turn follow-up resolution using conversation memory."""
+        cm = ConversationManager()
+
+        # Turn 1: Initial query
+        q1 = "What is the minimum eGFR required for patient inclusion?"
+        res1 = answer(q1, history=cm.get_history())
+        cm.add_message("user", q1)
+        cm.add_message("assistant", res1["answer"])
+        self.assertIn("45", res1["answer"])
+        self.assertIn("Page 14", res1["sources"])
+
+        # Turn 2: Referential follow-up
+        q2 = "What happens if the patient fails this criterion?"
+        res2 = answer(q2, history=cm.get_history())
+        cm.add_message("user", q2)
+        cm.add_message("assistant", res2["answer"])
+        self.assertTrue("excluded" in res2["answer"].lower() or "45" in res2["answer"])
+        self.assertIn("Page 14", res2["sources"])
 
     def test_vectorstore_persistence_no_reindexing(self):
         """Verify that persisted vector database is reloaded without generating embeddings again."""

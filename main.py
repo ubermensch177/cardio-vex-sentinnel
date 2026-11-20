@@ -1,6 +1,7 @@
 """
 Main Application and CLI Interface for CardioVex Sentinel AI.
-Provides interactive querying, assessment suite execution, and vector store management.
+Provides an interactive multi-turn conversational terminal chatbot, assessment runner,
+and vector store index rebuilder.
 
 Exports:
     def answer(question: str) -> dict
@@ -12,6 +13,7 @@ from typing import Dict
 from rag_engine import answer
 from run_assessment import run_assessment
 from ingestion import build_vectorstore
+from conversation import ConversationManager
 
 
 def print_banner():
@@ -22,19 +24,19 @@ def print_banner():
  | |    / _` | '__/ _` | |/ _ \\ \/ // _ \ \/ /    \___ \ / _ \ '_ \| __| | '_ \ / _ \ |
  | |___| (_| | | | (_| | | (_) |\  /|  __/>  <     ____) |  __/ | | | |_| | | | |  __/ |
   \_____\__,_|_|  \__,_|_|\___/  \/  \___/_/\_\   |_____/ \___|_| |_|\__|_|_| |_|\___|_|
-                     Phase III Protocol & Pharmacovigilance Assistant
+                     Phase III Protocol & Pharmacovigilance Chatbot
     """
     print(banner)
 
 
 def cli():
     parser = argparse.ArgumentParser(
-        description="CardioVex Sentinel AI - Clinical Trial Protocol RAG Assistant"
+        description="CardioVex Sentinel AI - Conversational Clinical Protocol RAG Chatbot"
     )
     parser.add_argument(
         "--question", "-q",
         type=str,
-        help="Question to query against the CardioVex clinical trial protocol."
+        help="Single question to query against the CardioVex clinical trial protocol."
     )
     parser.add_argument(
         "--assess", "-a",
@@ -50,7 +52,7 @@ def cli():
     args = parser.parse_args()
 
     if args.rebuild_index:
-        print("[*] Rebuilding persistent ChromaDB vector store...")
+        print("[*] Rebuilding persistent ChromaDB vector store (1000 chars, 200 overlap)...")
         client, collection, reindexed = build_vectorstore(force_rebuild=True)
         print(f"[✓] Vector store rebuilt successfully with {collection.count()} chunks.")
         return
@@ -67,28 +69,40 @@ def cli():
         print(f"[Sources]: {res['sources']}")
         return
 
-    # Interactive mode if no arguments provided
+    # Interactive multi-turn conversational mode
     print_banner()
-    print("Interactive Protocol Assistant initialized.")
-    print("Type your protocol question below, or 'assess' to run the benchmark, or 'exit' to quit.\n")
+    print("Conversational Protocol Chatbot initialized with multi-turn memory.")
+    print("You can ask any question, follow-up ('Why?', 'What if they fail?', 'What about SAEs?'),")
+    print("type 'assess' to run benchmark, 'clear' to reset dialogue, or 'exit' to quit.\n")
+
+    cm = ConversationManager()
 
     while True:
         try:
-            user_input = input("\nQuery [or 'assess'/'exit'] > ").strip()
+            user_input = input("\nClinician / You > ").strip()
             if not user_input:
                 continue
             if user_input.lower() in ["exit", "quit", "q"]:
                 print("Session closed.")
                 break
+            if user_input.lower() in ["clear", "reset", "/clear"]:
+                cm.clear()
+                print("[✓] Conversation memory cleared.")
+                continue
             if user_input.lower() in ["assess", "benchmark", "test"]:
                 run_assessment()
                 continue
 
-            res = answer(user_input)
-            print("\n---------------------------------------------------------")
-            print(f"Answer : {res['answer']}")
-            print(f"Sources: {res['sources']}")
-            print("---------------------------------------------------------")
+            # Pass multi-turn history
+            res = answer(user_input, history=cm.get_history())
+            cm.add_message("user", user_input)
+            cm.add_message("assistant", res["answer"])
+
+            print("\n" + "—" * 65)
+            print(f"Sentinel AI: {res['answer']}")
+            sources_str = ", ".join(res["sources"]) if res["sources"] else "None (Ungrounded Topic)"
+            print(f"Sources    : {sources_str}")
+            print("—" * 65)
         except (KeyboardInterrupt, EOFError):
             print("\nExiting.")
             break

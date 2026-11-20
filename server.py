@@ -658,6 +658,9 @@ CHATBOT_HTML = """<!DOCTYPE html>
         const btnSend = document.getElementById('btn-send');
         const typingIndicator = document.getElementById('typing-indicator');
 
+        // Multi-turn conversation state
+        let conversationHistory = [];
+
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -677,6 +680,7 @@ CHATBOT_HTML = """<!DOCTYPE html>
         }
 
         function clearConversation() {
+            conversationHistory = [];
             chatFeed.innerHTML = `
                 <div class="message-row">
                     <div class="avatar bot-avatar"><i class="fa-solid fa-robot"></i></div>
@@ -712,7 +716,10 @@ CHATBOT_HTML = """<!DOCTYPE html>
                 const resp = await fetch('/api/query', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: query })
+                    body: JSON.stringify({
+                        question: query,
+                        history: conversationHistory
+                    })
                 });
 
                 const data = await resp.json();
@@ -720,6 +727,10 @@ CHATBOT_HTML = """<!DOCTYPE html>
 
                 typingIndicator.style.display = 'none';
                 appendBotResponse(data.answer, data.sources, latency);
+
+                // Update client-side conversational memory
+                conversationHistory.push({ role: 'user', content: query });
+                conversationHistory.push({ role: 'assistant', content: data.answer });
             } catch (err) {
                 typingIndicator.style.display = 'none';
                 appendBotResponse("An error occurred while querying the ChromaDB RAG engine: " + err.message, [], "0.000");
@@ -923,11 +934,13 @@ class SentinelRequestHandler(BaseHTTPRequestHandler):
             try:
                 data = json.loads(body)
                 question = data.get("question", "")
+                history = data.get("history", [])
             except Exception:
                 question = ""
+                history = []
 
             start = time.time()
-            out = answer(question)
+            out = answer(question, history=history)
             elapsed = time.time() - start
 
             resp_payload = {
