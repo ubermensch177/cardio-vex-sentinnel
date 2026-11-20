@@ -233,6 +233,195 @@ def _try_external_llm(query: str, chunks: List[Dict]) -> Optional[Dict]:
         return None
 
 
+def _handle_small_talk_and_intro(question: str) -> Optional[Dict]:
+    """
+    Detects and handles human-like small talk, greetings, intros, and polite conversational phrases.
+    Returns None if the query contains protocol-specific clinical inquiries.
+    """
+    q_raw = question.strip()
+    q_clean = q_raw.lower()
+    # Normalize punctuation for pattern checking
+    q_norm = re.sub(r"[^\w\s]", " ", q_clean)
+    q_norm = re.sub(r"\s+", " ", q_norm).strip()
+
+    # Clinical protocol indicators - if any of these are present, prioritize RAG retrieval
+    protocol_indicators = {
+        "egfr", "sae", "cardiovex", "cvx", "cvx409", "cvx-409", "dose", "dosing", "dosage",
+        "price", "pricing", "amoxicillin", "temperature", "reconstitut", "reconstituted",
+        "vial", "vials", "refrigerator", "inclusion", "exclusion", "criteria", "criterion",
+        "patient", "patients", "investigator", "investigators", "pharmacovigilance", "adverse",
+        "endpoint", "endpoints", "randomiz", "randomization", "phase", "visit", "visits",
+        "blood", "panel", "panels", "laboratory", "consent", "dsmb", "audit", "audits",
+        "placebo", "heart failure", "nyha", "ckd", "dialysis", "pregnancy", "contraception",
+        "safety desk", "ecrf", "page", "section", "chapter", "module", "cutoff", "threshold",
+        "timeline", "timelines", "storage", "celsius", "pediatric", "paediatric", "ear infection",
+        "wholesale", "retail", "pharmacy", "pharmacies", "treating", "treatment", "medication",
+        "drug", "administer", "administration", "fail", "fails", "failing", "eligible",
+        "eligibility", "chf", "lvef", "troponin", "bnp", "serum", "creatinine"
+    }
+
+    has_protocol_keyword = any(kw in q_norm for kw in protocol_indicators)
+
+    # 1. Identity & Introduction
+    intro_patterns = [
+        r"^who are you",
+        r"^what is your name",
+        r"^what are you",
+        r"^introduce yourself",
+        r"^tell me about yourself",
+        r"^who made you",
+        r"^tell me who you are",
+        r"^tell me what you are"
+    ]
+    if any(re.search(p, q_norm) for p in intro_patterns):
+        return {
+            "answer": (
+                "Hello! I am **CardioVex Sentinel AI**, an autonomous clinical trial protocol and pharmacovigilance assistant. "
+                "I am equipped with comprehensive knowledge of the official 50-page Phase III clinical trial protocol for CardioVex (CVX-409), "
+                "evaluating adult chronic heart failure patients across multicenter sites. "
+                "I can assist you with patient eligibility criteria, dosing administration, 24-hour Serious Adverse Event (SAE) reporting guidelines, "
+                "temperature-controlled medication storage, and clinical study endpoints with strict evidence-grounded precision. "
+                "How may I assist your clinical investigation today?"
+            ),
+            "sources": []
+        }
+
+    # 2. Capabilities & What can you do / How can you help
+    capabilities_patterns = [
+        r"^what can you do",
+        r"^what are your capabilities",
+        r"^how can you help",
+        r"^what do you do",
+        r"^can you help me",
+        r"^how does this work",
+        r"^what topics do you cover",
+        r"^what do you know",
+        r"^help$"
+    ]
+    if any(re.search(p, q_norm) for p in capabilities_patterns):
+        return {
+            "answer": (
+                "I can assist you with any clinical, procedural, or regulatory question regarding the CardioVex Phase III trial protocol, including:\n\n"
+                "• **Patient Eligibility:** Minimum eGFR thresholds (≥ 45 mL/min/1.73m²), inclusion/exclusion criteria, and demographic guidelines.\n"
+                "• **Pharmacovigilance & Safety:** Serious Adverse Event (SAE) definitions, causality assessment, and the mandatory 24-hour reporting window to the Safety Desk.\n"
+                "• **Investigational Product Handling:** Cold-chain storage requirements (2°C to 8°C for reconstituted vials), reconstitution steps, and accountability logs.\n"
+                "• **Trial Operations:** Randomization procedures, double-blind treatment arms, schedule of clinical visits, and laboratory panels.\n"
+                "• **Study Endpoints:** Primary cardiovascular mortality/heart failure hospitalization endpoints and secondary biomarkers.\n\n"
+                "Feel free to ask a question in natural language, and I will retrieve the exact protocol answer with verified page citations."
+            ),
+            "sources": []
+        }
+
+    # 3. Well-being & Pleasantries
+    wellbeing_patterns = [
+        r"^how are you",
+        r"^how are you doing",
+        r"^how is it going",
+        r"^hows it going",
+        r"^how do you feel",
+        r"^how are things",
+        r"^hope you are well"
+    ]
+    if any(re.search(p, q_norm) for p in wellbeing_patterns) and not has_protocol_keyword:
+        return {
+            "answer": (
+                "I'm doing well, thank you for asking! I'm active and ready to assist you with the CardioVex Phase III clinical trial protocol. "
+                "What protocol parameters, eligibility criteria, or safety reporting procedures would you like to review?"
+            ),
+            "sources": []
+        }
+
+    # 4. Gratitude / Thanks
+    gratitude_patterns = [
+        r"^thank you",
+        r"^thanks",
+        r"^thank you so much",
+        r"^thanks a lot",
+        r"^many thanks",
+        r"^appreciate it",
+        r"^thx",
+        r"^great thank you",
+        r"^great thanks"
+    ]
+    if any(re.search(p, q_norm) for p in gratitude_patterns) and not has_protocol_keyword:
+        return {
+            "answer": (
+                "You're very welcome! If you need any further details, criteria checks, or procedure summaries from the CardioVex protocol, just ask."
+            ),
+            "sources": []
+        }
+
+    # 5. Farewells
+    farewell_patterns = [
+        r"^bye",
+        r"^goodbye",
+        r"^see you",
+        r"^see you later",
+        r"^take care",
+        r"^have a good day",
+        r"^have a nice day",
+        r"^farewell"
+    ]
+    if any(re.search(p, q_norm) for p in farewell_patterns) and not has_protocol_keyword:
+        return {
+            "answer": (
+                "Goodbye! Please feel free to return whenever you need assistance with clinical trial documentation or pharmacovigilance guidelines. Have a great day!"
+            ),
+            "sources": []
+        }
+
+    # 6. Conversational Fillers / Acknowledgments
+    filler_patterns = [
+        r"^(ok|okay)$",
+        r"^(cool|awesome|great|nice|perfect)$",
+        r"^(sounds good|got it|understood|all right|alright)$"
+    ]
+    if any(re.search(p, q_norm) for p in filler_patterns) and not has_protocol_keyword:
+        return {
+            "answer": (
+                "Understood! Whenever you're ready, feel free to ask any question regarding the CardioVex Phase III clinical trial protocol."
+            ),
+            "sources": []
+        }
+
+    # 7. Greetings (hi, hello, hey, etc.)
+    greeting_patterns = [
+        r"^hi$",
+        r"^hello$",
+        r"^hey$",
+        r"^hey there$",
+        r"^hello there$",
+        r"^good morning$",
+        r"^good afternoon$",
+        r"^good evening$",
+        r"^howdy$",
+        r"^greetings$",
+        r"^yo$",
+        r"^sup$"
+    ]
+    if any(re.search(p, q_norm) for p in greeting_patterns) and not has_protocol_keyword:
+        return {
+            "answer": (
+                "Hello! I am CardioVex Sentinel AI, your clinical trial and pharmacovigilance assistant for the Phase III CVX-409 trial. "
+                "How can I help you today? You can ask me about patient eligibility, SAE reporting timelines, medication storage, or any other trial procedure."
+            ),
+            "sources": []
+        }
+
+    # Compound greeting + intro (e.g. "hi, who are you?")
+    if re.search(r"^(hi|hello|hey)\s+(can you tell me|what can you do|who are you|how can you help)", q_norm):
+        return {
+            "answer": (
+                "Hello! I am CardioVex Sentinel AI. I assist clinical researchers, investigators, and safety monitors with the 50-page CardioVex Phase III protocol. "
+                "I provide verified answers regarding patient inclusion/exclusion criteria (e.g., eGFR thresholds), pharmacovigilance (24-hour SAE reporting), "
+                "drug reconstitution, cold-chain storage (2°C to 8°C), and visit schedules with direct protocol page citations."
+            ),
+            "sources": []
+        }
+
+    return None
+
+
 def answer(question: str, history: Optional[List[Dict[str, str]]] = None) -> dict:
     """
     Required Function:
@@ -245,6 +434,11 @@ def answer(question: str, history: Optional[List[Dict[str, str]]] = None) -> dic
     """
     if not question or not isinstance(question, str) or not question.strip():
         return {"answer": "[not found]", "sources": []}
+
+    # Step 0: Human-like Small Talk & Conversational Intro
+    small_talk_resp = _handle_small_talk_and_intro(question)
+    if small_talk_resp is not None:
+        return small_talk_resp
 
     # Step 1: Contextual Query Rewriting
     retrieval_query = rewrite_query_with_context(question.strip(), history)

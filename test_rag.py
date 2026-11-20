@@ -122,6 +122,45 @@ class TestCardioVexSentinel(unittest.TestCase):
         self.assertEqual(res_whitespace["answer"], "[not found]")
         self.assertEqual(res_whitespace["sources"], [])
 
+    def test_human_small_talk_and_intro(self):
+        """Verify human-like small talk, greetings, intros, and polite responses."""
+        # 1. Greeting
+        res_greet = answer("Hello")
+        self.assertIn("CardioVex Sentinel AI", res_greet["answer"])
+        self.assertEqual(res_greet["sources"], [])
+
+        # 2. Introduction
+        res_who = answer("Who are you?")
+        self.assertIn("CardioVex Sentinel AI", res_who["answer"])
+        self.assertIn("CVX-409", res_who["answer"])
+        self.assertEqual(res_who["sources"], [])
+
+        # 3. Capabilities
+        res_caps = answer("What can you do?")
+        self.assertIn("Patient Eligibility", res_caps["answer"])
+        self.assertEqual(res_caps["sources"], [])
+
+        # 4. Well-being
+        res_wellbeing = answer("How are you?")
+        self.assertIn("doing well", res_wellbeing["answer"].lower())
+        self.assertEqual(res_wellbeing["sources"], [])
+
+        # 5. Gratitude
+        res_thanks = answer("Thank you so much!")
+        self.assertIn("welcome", res_thanks["answer"].lower())
+        self.assertEqual(res_thanks["sources"], [])
+
+        # 6. Farewell
+        res_bye = answer("Goodbye!")
+        self.assertIn("goodbye", res_bye["answer"].lower())
+        self.assertEqual(res_bye["sources"], [])
+
+    def test_mixed_greeting_with_clinical_question(self):
+        """Verify that a greeting combined with a clinical question properly routes to RAG."""
+        res = answer("Hi, what is the minimum required eGFR threshold?")
+        self.assertIn("45", res["answer"])
+        self.assertIn("Page 14", res["sources"])
+
 
 if __name__ == "__main__":
     unittest.main()

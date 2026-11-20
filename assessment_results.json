@@ -10,7 +10,7 @@
     "generated_sources": [
       "Page 14"
     ],
-    "latency_sec": 0.191,
+    "latency_sec": 0.2114,
     "passed": true
   },
   {
@@ -24,7 +24,7 @@
     "generated_sources": [
       "Page 28"
     ],
-    "latency_sec": 0.0981,
+    "latency_sec": 0.1066,
     "passed": true
   },
   {
@@ -34,7 +34,7 @@
     "expected_sources": [],
     "generated_answer": "[not found]",
     "generated_sources": [],
-    "latency_sec": 0.1264,
+    "latency_sec": 0.106,
     "passed": true
   },
   {
@@ -48,7 +48,7 @@
     "generated_sources": [
       "Page 42"
     ],
-    "latency_sec": 0.0974,
+    "latency_sec": 0.1046,
     "passed": true
   },
   {
@@ -58,7 +58,7 @@
     "expected_sources": [],
     "generated_answer": "[not found]",
     "generated_sources": [],
-    "latency_sec": 0.1021,
+    "latency_sec": 0.1091,
     "passed": true
   }
 ]
